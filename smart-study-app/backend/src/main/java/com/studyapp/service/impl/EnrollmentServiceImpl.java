@@ -45,6 +45,19 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         Subject subject = subjectRepository.findById(subjectId)
                 .orElseThrow(() -> new RuntimeException("Subject not found"));
 
+        // Check registration period
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+
+        if (subject.getRegistrationStartDate() != null && now.isBefore(subject.getRegistrationStartDate())) {
+            throw new RuntimeException("Chưa đến thời gian đăng ký môn học này. Thời gian mở đăng ký: " +
+                    subject.getRegistrationStartDate().toString().replace("T", " ").substring(0, 16));
+        }
+
+        if (subject.getRegistrationEndDate() != null && now.isAfter(subject.getRegistrationEndDate())) {
+            throw new RuntimeException("Đã hết thời gian đăng ký môn học này. Hạn chót: " +
+                    subject.getRegistrationEndDate().toString().replace("T", " ").substring(0, 16));
+        }
+
         // Check for schedule conflicts with student's enrolled subjects
         checkStudentScheduleConflict(studentId, subjectId);
 
@@ -145,6 +158,27 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         dto.setSemester(subject.getSemester());
         dto.setColor(subject.getColor());
         dto.setDescription(subject.getDescription());
+
+        // Registration period info
+        dto.setRegistrationStartDate(subject.getRegistrationStartDate());
+        dto.setRegistrationEndDate(subject.getRegistrationEndDate());
+
+        // Calculate registration status
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        boolean isOpen = true;
+        String status = "OPEN";
+
+        if (subject.getRegistrationStartDate() != null && now.isBefore(subject.getRegistrationStartDate())) {
+            isOpen = false;
+            status = "NOT_STARTED";
+        } else if (subject.getRegistrationEndDate() != null && now.isAfter(subject.getRegistrationEndDate())) {
+            isOpen = false;
+            status = "CLOSED";
+        }
+
+        dto.setRegistrationOpen(isOpen);
+        dto.setRegistrationStatus(status);
+
         return dto;
     }
 

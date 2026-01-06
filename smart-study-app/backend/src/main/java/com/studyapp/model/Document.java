@@ -25,8 +25,8 @@ public class Document {
     private User user; // Người upload
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subject_id", nullable = false)
-    private Subject subject;
+    @JoinColumn(name = "subject_id", nullable = true)
+    private Subject subject; // Có thể null nếu không gắn với môn học cụ thể
 
     @Column(nullable = false, length = 200)
     private String title; // Tên tài liệu
@@ -61,6 +61,15 @@ public class Document {
 
     @Column(columnDefinition = "TEXT")
     private String tags; // Tags để tìm kiếm (cách nhau bởi dấu phẩy)
+
+    @Column(nullable = false)
+    private Integer likeCount = 0; // Số lượt thích
+
+    @Column(nullable = false)
+    private Integer commentCount = 0; // Số bình luận
+
+    @Column(nullable = false)
+    private Boolean isShared = false; // Đã được chia sẻ lên cộng đồng
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

@@ -92,7 +92,9 @@
 
 .class-count {
     font-size: 0.85rem;
-    opacity: 0.9;
+    opacity: 1;
+    color: white;
+    font-weight: 500;
 }
 
 .day-classes {
@@ -231,15 +233,18 @@
 
 .schedule-day {
     min-width: 80px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: white;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff !important;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 0.9rem;
-    padding: 10px;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 12px 10px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    opacity: 1 !important;
+    letter-spacing: 0.5px;
 }
 
 .schedule-info {

@@ -1,6 +1,7 @@
 package com.studyapp.dto;
 
 import lombok.Data;
+import java.time.LocalDateTime;
 
 @Data
 public class SubjectDTO {
@@ -15,4 +16,10 @@ public class SubjectDTO {
     private String color;
     private String description;
     private Integer targetYear;
+
+    // Thời gian đăng ký môn học
+    private LocalDateTime registrationStartDate;
+    private LocalDateTime registrationEndDate;
+    private Boolean registrationOpen; // true nếu đang trong thời gian đăng ký
+    private String registrationStatus; // "NOT_STARTED", "OPEN", "CLOSED"
 }

@@ -15,7 +15,8 @@ const TeacherSubjects = ({ user }) => {
 
     // Form states
     const [subjectForm, setSubjectForm] = useState({
-        name: '', code: '', credits: 3, room: '', semester: '', description: '', color: '#2563eb', targetYear: 1
+        name: '', code: '', credits: 3, room: '', semester: '', description: '', color: '#2563eb', targetYear: 1,
+        registrationStartDate: '', registrationEndDate: ''
     });
     const [scheduleForm, setScheduleForm] = useState({
         dayOfWeek: 'MONDAY', startTime: '', endTime: '', room: '', type: 'THEORY'
@@ -45,7 +46,10 @@ const TeacherSubjects = ({ user }) => {
     // --- Subject Management ---
     const handleCreateSubject = () => {
         setEditingSubject(null);
-        setSubjectForm({ name: '', code: '', credits: 3, room: '', semester: '', description: '', color: '#2563eb', targetYear: 1 });
+        setSubjectForm({
+            name: '', code: '', credits: 3, room: '', semester: '', description: '', color: '#2563eb', targetYear: 1,
+            registrationStartDate: '', registrationEndDate: ''
+        });
         setShowSubjectModal(true);
     };
 
@@ -59,7 +63,9 @@ const TeacherSubjects = ({ user }) => {
             semester: subject.semester || '',
             description: subject.description || '',
             color: subject.color || '#2563eb',
-            targetYear: subject.targetYear || 1
+            targetYear: subject.targetYear || 1,
+            registrationStartDate: subject.registrationStartDate ? subject.registrationStartDate.substring(0, 16) : '',
+            registrationEndDate: subject.registrationEndDate ? subject.registrationEndDate.substring(0, 16) : ''
         });
         setShowSubjectModal(true);
     };
@@ -80,7 +86,9 @@ const TeacherSubjects = ({ user }) => {
             const dataToSend = {
                 ...subjectForm,
                 credits: parseInt(subjectForm.credits) || 3,
-                targetYear: parseInt(subjectForm.targetYear) || 1
+                targetYear: parseInt(subjectForm.targetYear) || 1,
+                registrationStartDate: subjectForm.registrationStartDate || null,
+                registrationEndDate: subjectForm.registrationEndDate || null
             };
 
             if (editingSubject) {
@@ -146,7 +154,7 @@ const TeacherSubjects = ({ user }) => {
         <div className="teacher-subjects-page">
             <div className="page-header">
                 <div>
-                    <h1>👨‍🏫 Quản lý Môn Học</h1>
+                    <h1><span className="page-icon">👨‍🏫</span> Quản lý Môn Học</h1>
                     <p className="subtitle">Tạo môn học và sắp xếp lịch giảng dạy</p>
                 </div>
                 <button className="btn btn-primary" onClick={handleCreateSubject}>
@@ -162,12 +170,30 @@ const TeacherSubjects = ({ user }) => {
                                 <h3>{subject.name}</h3>
                                 <span className="subject-code">{subject.code}</span>
                             </div>
+                            {/* Registration Status Badge */}
+                            <div className={`registration-badge ${subject.registrationStatus?.toLowerCase() || 'open'}`}>
+                                {subject.registrationStatus === 'OPEN' && '🟢 Đang mở đăng ký'}
+                                {subject.registrationStatus === 'NOT_STARTED' && '🟡 Chưa mở đăng ký'}
+                                {subject.registrationStatus === 'CLOSED' && '🔴 Đã đóng đăng ký'}
+                                {!subject.registrationStatus && '🟢 Đang mở đăng ký'}
+                            </div>
                         </div>
                         <div className="subject-info">
                             <div className="info-row">📊 {subject.credits} tín chỉ</div>
                             <div className="info-row">📅 {subject.semester}</div>
                             <div className="info-row">📍 {subject.room}</div>
                             <div className="info-row">🎓 Năm: {subject.targetYear}</div>
+                            {(subject.registrationStartDate || subject.registrationEndDate) && (
+                                <div className="info-row registration-period">
+                                    📝 Thời gian ĐK:
+                                    {subject.registrationStartDate && (
+                                        <span> từ {new Date(subject.registrationStartDate).toLocaleDateString('vi-VN')} </span>
+                                    )}
+                                    {subject.registrationEndDate && (
+                                        <span> đến {new Date(subject.registrationEndDate).toLocaleDateString('vi-VN')}</span>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         <div className="subject-actions">
                             <button className="btn btn-outline" onClick={() => handleManageSchedule(subject)}>
@@ -232,6 +258,32 @@ const TeacherSubjects = ({ user }) => {
                             <div className="form-group">
                                 <label>Mô tả</label>
                                 <textarea className="form-control" value={subjectForm.description} onChange={e => setSubjectForm({ ...subjectForm, description: e.target.value })} rows="3" />
+                            </div>
+
+                            {/* Registration Period */}
+                            <div style={{ background: '#f0f9ff', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+                                <h4 style={{ margin: '0 0 10px 0', color: '#0369a1', fontSize: '0.95rem' }}>⏰ Thời gian đăng ký môn học</h4>
+                                <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0 0 10px 0' }}>Sinh viên chỉ có thể đăng ký môn học trong khoảng thời gian này. Nếu không đặt, môn học sẽ luôn mở đăng ký.</p>
+                                <div style={{ display: 'flex', gap: '15px' }}>
+                                    <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                                        <label>Bắt đầu đăng ký</label>
+                                        <input
+                                            type="datetime-local"
+                                            className="form-control"
+                                            value={subjectForm.registrationStartDate}
+                                            onChange={e => setSubjectForm({ ...subjectForm, registrationStartDate: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                                        <label>Kết thúc đăng ký</label>
+                                        <input
+                                            type="datetime-local"
+                                            className="form-control"
+                                            value={subjectForm.registrationEndDate}
+                                            onChange={e => setSubjectForm({ ...subjectForm, registrationEndDate: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                             <div className="modal-actions">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowSubjectModal(false)}>Hủy</button>

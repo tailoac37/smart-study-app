@@ -123,6 +123,27 @@ public class SubjectServiceImpl implements SubjectService {
         dto.setColor(subject.getColor());
         dto.setDescription(subject.getDescription());
         dto.setTargetYear(subject.getTargetYear());
+
+        // Registration period info
+        dto.setRegistrationStartDate(subject.getRegistrationStartDate());
+        dto.setRegistrationEndDate(subject.getRegistrationEndDate());
+
+        // Calculate registration status
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        boolean isOpen = true;
+        String status = "OPEN";
+
+        if (subject.getRegistrationStartDate() != null && now.isBefore(subject.getRegistrationStartDate())) {
+            isOpen = false;
+            status = "NOT_STARTED";
+        } else if (subject.getRegistrationEndDate() != null && now.isAfter(subject.getRegistrationEndDate())) {
+            isOpen = false;
+            status = "CLOSED";
+        }
+
+        dto.setRegistrationOpen(isOpen);
+        dto.setRegistrationStatus(status);
+
         return dto;
     }
 
@@ -137,5 +158,9 @@ public class SubjectServiceImpl implements SubjectService {
         subject.setColor(dto.getColor());
         subject.setDescription(dto.getDescription());
         subject.setTargetYear(dto.getTargetYear() != null ? dto.getTargetYear() : 1);
+
+        // Registration period
+        subject.setRegistrationStartDate(dto.getRegistrationStartDate());
+        subject.setRegistrationEndDate(dto.getRegistrationEndDate());
     }
 }

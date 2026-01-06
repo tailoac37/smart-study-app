@@ -56,6 +56,13 @@ public class Subject {
     @Column(length = 7)
     private String color = "#2563eb"; // Màu đại diện cho môn học
 
+    // Thời gian mở đăng ký môn học
+    @Column
+    private LocalDateTime registrationStartDate; // Ngày bắt đầu cho phép đăng ký
+
+    @Column
+    private LocalDateTime registrationEndDate; // Ngày kết thúc đăng ký
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

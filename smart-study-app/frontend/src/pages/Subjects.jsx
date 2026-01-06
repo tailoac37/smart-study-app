@@ -169,11 +169,18 @@ const Subjects = () => {
                     ) : (
                         <div className="subjects-grid">
                             {availableSubjects.map(subject => (
-                                <div key={subject.id} className="subject-card available" style={{ borderLeftColor: subject.color }}>
+                                <div key={subject.id} className={`subject-card available ${!subject.registrationOpen ? 'registration-closed' : ''}`} style={{ borderLeftColor: subject.color }}>
                                     <div className="subject-header">
                                         <div>
                                             <h3>{subject.name}</h3>
                                             <span className="subject-code">{subject.code}</span>
+                                        </div>
+                                        {/* Registration Status Badge */}
+                                        <div className={`registration-badge ${subject.registrationStatus?.toLowerCase() || 'open'}`}>
+                                            {subject.registrationStatus === 'OPEN' && '🟢 Đang mở'}
+                                            {subject.registrationStatus === 'NOT_STARTED' && '🟡 Chưa mở'}
+                                            {subject.registrationStatus === 'CLOSED' && '🔴 Đã đóng'}
+                                            {!subject.registrationStatus && '🟢 Đang mở'}
                                         </div>
                                     </div>
 
@@ -204,6 +211,21 @@ const Subjects = () => {
                                                 <span>{subject.semester}</span>
                                             </div>
                                         )}
+                                        {/* Registration Period Info */}
+                                        {(subject.registrationStartDate || subject.registrationEndDate) && (
+                                            <div className="info-row registration-period-info">
+                                                <span className="icon">⏰</span>
+                                                <span>
+                                                    Đăng ký:
+                                                    {subject.registrationStartDate && (
+                                                        <> từ {new Date(subject.registrationStartDate).toLocaleDateString('vi-VN')}</>
+                                                    )}
+                                                    {subject.registrationEndDate && (
+                                                        <> đến {new Date(subject.registrationEndDate).toLocaleDateString('vi-VN')}</>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {subject.description && (
@@ -213,12 +235,30 @@ const Subjects = () => {
                                     )}
 
                                     <div className="subject-actions">
-                                        <button
-                                            className="btn btn-primary"
-                                            onClick={() => handleEnroll(subject.id)}
-                                        >
-                                            Đăng ký môn này
-                                        </button>
+                                        {subject.registrationOpen !== false ? (
+                                            <button
+                                                className="btn btn-primary"
+                                                onClick={() => handleEnroll(subject.id)}
+                                            >
+                                                Đăng ký môn này
+                                            </button>
+                                        ) : (
+                                            <div className="registration-status-message">
+                                                {subject.registrationStatus === 'NOT_STARTED' && (
+                                                    <span className="status-not-started">
+                                                        ⏳ Chưa đến thời gian đăng ký
+                                                        {subject.registrationStartDate && (
+                                                            <small>Mở từ: {new Date(subject.registrationStartDate).toLocaleString('vi-VN')}</small>
+                                                        )}
+                                                    </span>
+                                                )}
+                                                {subject.registrationStatus === 'CLOSED' && (
+                                                    <span className="status-closed">
+                                                        🚫 Đã hết thời gian đăng ký
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}

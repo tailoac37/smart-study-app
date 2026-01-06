@@ -188,4 +188,32 @@ export const statsAPI = {
     getStudyTime: () => api.get('/stats/study-time'),
 };
 
+// Shared Document API (Mạng xã hội tài liệu)
+export const sharedDocumentAPI = {
+    // Feed
+    getFeed: () => api.get('/shared-documents/feed'),
+    getHot: () => api.get('/shared-documents/hot'),
+    search: (keyword) => api.get('/shared-documents/search', { params: { keyword } }),
+    getByType: (type) => api.get(`/shared-documents/type/${type}`),
+
+    // Document CRUD
+    getById: (id) => api.get(`/shared-documents/${id}`),
+    upload: (formData) => api.post('/shared-documents/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    update: (id, data) => api.put(`/shared-documents/${id}`, data),
+    delete: (id) => api.delete(`/shared-documents/${id}`),
+
+    // Interactions
+    toggleLike: (id) => api.post(`/shared-documents/${id}/like`),
+    getComments: (id) => api.get(`/shared-documents/${id}/comments`),
+    addComment: (id, data) => api.post(`/shared-documents/${id}/comments`, data),
+    deleteComment: (commentId) => api.delete(`/shared-documents/comments/${commentId}`),
+    trackDownload: (id) => api.post(`/shared-documents/${id}/download`),
+
+    // My documents
+    getMyDocuments: () => api.get('/shared-documents/my-documents'),
+};
+
 export default api;
+

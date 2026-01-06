@@ -113,12 +113,13 @@
 
 .subject-code {
     display: inline-block;
-    background: var(--primary-light);
-    color: var(--primary);
-    padding: 4px 12px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff !important;
+    padding: 6px 14px;
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .subject-status {
@@ -319,4 +320,77 @@
 
 .subject-card:nth-child(6) {
     animation-delay: 0.3s;
+}
+
+/* Registration Status Badge */
+.registration-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.registration-badge.open {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.registration-badge.not_started {
+    background: #fef9c3;
+    color: #ca8a04;
+}
+
+.registration-badge.closed {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Registration Period Info */
+.registration-period-info {
+    background: #f0f9ff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 5px;
+    font-size: 0.85rem !important;
+    color: #0369a1 !important;
+}
+
+/* Registration Closed Card Style */
+.subject-card.registration-closed {
+    opacity: 0.85;
+    background: #fafafa;
+}
+
+.subject-card.registration-closed:hover {
+    transform: translateY(-2px);
+}
+
+/* Registration Status Message */
+.registration-status-message {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.registration-status-message .status-not-started {
+    color: #ca8a04;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-weight: 500;
+}
+
+.registration-status-message .status-not-started small {
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: #64748b;
+}
+
+.registration-status-message .status-closed {
+    color: #dc2626;
+    font-weight: 500;
 }
