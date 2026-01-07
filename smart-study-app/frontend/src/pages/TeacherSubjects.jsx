@@ -344,19 +344,29 @@ const TeacherSubjects = ({ user }) => {
                             {/* Schedule List */}
                             <div className="schedule-list">
                                 {schedules.length === 0 ? (
-                                    <p style={{ textAlign: 'center', color: '#666' }}>Chưa có lịch học nào.</p>
+                                    <p style={{ textAlign: 'center', color: '#666', padding: '30px' }}>
+                                        📅 Chưa có lịch học nào. Hãy thêm lịch học ở form bên trên.
+                                    </p>
                                 ) : (
                                     schedules.map(sch => (
                                         <div key={sch.id} className="schedule-item">
-                                            <div className="schedule-info">
-                                                <span className="schedule-day">{daysVN[sch.dayOfWeek]}</span>
-                                                <span>⏰ {sch.startTime.substring(0, 5)} - {sch.endTime.substring(0, 5)}</span>
-                                                <span>📍 {sch.room || selectedSubject.room}</span>
-                                                <span style={{ fontSize: '0.8rem', padding: '2px 8px', background: '#e2e8f0', borderRadius: '10px' }}>
-                                                    {sch.type === 'THEORY' ? 'Lý thuyết' : 'Thực hành'}
-                                                </span>
-                                            </div>
-                                            <button className="btn btn-danger" style={{ padding: '5px 10px' }} onClick={() => handleDeleteSchedule(sch.id)}>🗑️</button>
+                                            <span className="schedule-day">{daysVN[sch.dayOfWeek]}</span>
+                                            <span className="schedule-time">
+                                                {sch.startTime.substring(0, 5)} - {sch.endTime.substring(0, 5)}
+                                            </span>
+                                            <span className="schedule-room">{sch.room || selectedSubject.room || 'N/A'}</span>
+                                            <span className={`schedule-type-badge ${sch.type?.toLowerCase()}`}>
+                                                {sch.type === 'THEORY' ? 'Lý thuyết' :
+                                                    sch.type === 'PRACTICE' ? 'Thực hành' :
+                                                        sch.type === 'LAB' ? 'Thí nghiệm' : 'Seminar'}
+                                            </span>
+                                            <button
+                                                className="schedule-delete-btn"
+                                                onClick={() => handleDeleteSchedule(sch.id)}
+                                                title="Xóa lịch học này"
+                                            >
+                                                🗑️
+                                            </button>
                                         </div>
                                     ))
                                 )}

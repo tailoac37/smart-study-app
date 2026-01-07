@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Header.css';
 
-const Header = ({ user, onLogout }) => {
+const Header = ({ user, onLogout, notifications, unreadCount, setUnreadCount }) => {
     const [currentTime, setCurrentTime] = useState(new Date());
-    const [notificationCount, setNotificationCount] = useState(3);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -30,6 +31,10 @@ const Header = ({ user, onLogout }) => {
         });
     };
 
+    const handleNotificationClick = () => {
+        navigate('/notifications');
+    };
+
     return (
         <header className="header">
             <div className="header-left">
@@ -45,10 +50,14 @@ const Header = ({ user, onLogout }) => {
                         🔍
                     </button>
 
-                    <button className="icon-btn notification-btn" title="Thông báo">
+                    <button
+                        className="icon-btn notification-btn"
+                        title="Thông báo"
+                        onClick={handleNotificationClick}
+                    >
                         🔔
-                        {notificationCount > 0 && (
-                            <span className="notification-badge">{notificationCount}</span>
+                        {unreadCount > 0 && (
+                            <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
                         )}
                     </button>
                 </div>
@@ -74,3 +83,4 @@ const Header = ({ user, onLogout }) => {
 };
 
 export default Header;
+

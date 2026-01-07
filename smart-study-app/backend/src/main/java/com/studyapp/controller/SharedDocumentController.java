@@ -28,9 +28,13 @@ public class SharedDocumentController {
     private UserRepository userRepository;
 
     private Long getCurrentUserId(Authentication authentication) {
-        String username = authentication.getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        String usernameOrEmail = authentication.getName();
+        // Try to find by username first, then by email (since CustomUserDetailsService
+        // returns email as principal name)
+        User user = userRepository.findByUsername(usernameOrEmail)
+                .orElseGet(() -> userRepository.findByEmail(usernameOrEmail)
+                        .orElseThrow(() -> new RuntimeException(
+                                "User not found with username or email: " + usernameOrEmail)));
         return user.getId();
     }
 

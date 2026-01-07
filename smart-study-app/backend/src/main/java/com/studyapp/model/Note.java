@@ -20,6 +20,14 @@ public class Note {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private Boolean isRead = false; // Đã đọc hay chưa (cho thông báo/chia sẻ)
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private NoteStatus status = NoteStatus.TODO; // Trạng thái công việc: TODO, DOING, DONE
+
+    // Các mối quan hệ
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -27,6 +35,10 @@ public class Note {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     private Subject subject; // Có thể null nếu là ghi chú chung
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id")
+    private User sender; // Người gửi (nếu là note được chia sẻ)
 
     @Column(nullable = false, length = 200)
     private String title;
@@ -58,15 +70,8 @@ public class Note {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
-    private User sender; // Người gửi (nếu là tin nhắn/thông báo)
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reply_to_id")
     private Note replyTo; // Phản hồi cho ghi chú nào
-
-    @Column(nullable = false)
-    private Boolean isRead = true; // Đã đọc chưa (mặc định true cho ghi chú cá nhân, false cho tin nhắn)
 
     private LocalDateTime reminderTime; // Thời gian nhắc nhở
 
@@ -76,6 +81,14 @@ public class Note {
         SUMMARY, // Tóm tắt
         QUESTION, // Câu hỏi
         IMPORTANT, // Quan trọng
-        TODO // Việc cần làm
+        TODO, // Việc cần làm
+        STUDY, // Học tập (Legacy)
+        PERSONAL // Cá nhân (Legacy)
+    }
+
+    public enum NoteStatus {
+        TODO, // Chưa làm
+        IN_PROGRESS, // Đang làm
+        DONE // Hoàn thành
     }
 }

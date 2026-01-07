@@ -26,4 +26,5 @@ public class NoteDTO {
     private Long replyToId;
     private Boolean isRead;
     private LocalDateTime reminderTime;
+    private Note.NoteStatus status;
 }

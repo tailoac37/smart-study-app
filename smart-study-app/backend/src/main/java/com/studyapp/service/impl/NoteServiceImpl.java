@@ -95,6 +95,8 @@ public class NoteServiceImpl implements NoteService {
             note.setIsFavorite(noteDTO.getIsFavorite());
         note.setTags(noteDTO.getTags());
         note.setReminderTime(noteDTO.getReminderTime()); // Update reminder
+        if (noteDTO.getStatus() != null)
+            note.setStatus(noteDTO.getStatus()); // Update status
 
         return convertToDTO(noteRepository.save(note));
     }
@@ -267,6 +269,7 @@ public class NoteServiceImpl implements NoteService {
         dto.setUpdatedAt(note.getUpdatedAt());
         dto.setIsRead(note.getIsRead());
         dto.setReminderTime(note.getReminderTime());
+        dto.setStatus(note.getStatus()); // Map status
 
         if (note.getSubject() != null) {
             dto.setSubjectId(note.getSubject().getId());

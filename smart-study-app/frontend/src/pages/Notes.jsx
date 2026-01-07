@@ -119,13 +119,21 @@ const Notes = ({ user }) => {
     const handleSend = async (e) => {
         e.preventDefault();
         try {
+            // Simple fix: Send the local time string directly (just add seconds)
+            // Input type="datetime-local" gives us "YYYY-MM-DDTHH:mm" which is already local time
+            let formattedReminderTime = null;
+            if (reminderTime) {
+                // Ensure seconds are included for LocalDateTime parsing in backend
+                formattedReminderTime = reminderTime.length === 16 ? reminderTime + ':00' : reminderTime;
+            }
+
             const payload = {
                 title: noteTitle,
                 content: noteContent,
                 subjectId: selectedSubject ? parseInt(selectedSubject) : null,
                 color: '#3b82f6', // blue
                 type: 'IMPORTANT',
-                reminderTime: reminderTime ? new Date(reminderTime).toISOString() : null
+                reminderTime: formattedReminderTime
             };
 
             if (activeTab === 'create-personal') {
@@ -178,6 +186,141 @@ const Notes = ({ user }) => {
                 console.error(error);
             }
         }
+    };
+
+    const handleUpdateStatus = async (note, newStatus) => {
+        try {
+            // Optimistic update
+            setNotes(prev => prev.map(n => n.id === note.id ? { ...n, status: newStatus } : n));
+
+            const payload = {
+                userId: user.id, // Ensure user ID is passed if needed, though mostly inferred from token
+                title: note.title,
+                content: note.content,
+                type: note.type,
+                color: note.color,
+                isPinned: note.isPinned,
+                isFavorite: note.isFavorite,
+                reminderTime: note.reminderTime,
+                status: newStatus,
+                subjectId: note.subjectId
+            };
+
+            await noteAPI.update(note.id, payload);
+        } catch (error) {
+            console.error("Failed to update status", error);
+            alert("Lỗi cập nhật trạng thái");
+            loadNotes(); // Revert on error
+        }
+    };
+
+    const handleDeleteNote = async (noteId, e) => {
+        if (e) e.stopPropagation();
+        if (window.confirm('Bạn có chắc chắn muốn xóa ghi chú này không?')) {
+            try {
+                await noteAPI.delete(noteId);
+                setNotes(prev => prev.filter(n => n.id !== noteId));
+                if (selectedNote?.id === noteId) setSelectedNote(null);
+                // No need to alert overly, maybe simple notification or just disappear
+            } catch (error) {
+                console.error("Failed to delete note", error);
+                alert("Lỗi khi xóa ghi chú: " + (error.response?.data?.message || "Không xác định"));
+            }
+        }
+    };
+
+    const renderKanban = () => {
+        const columns = {
+            TODO: { title: '📌 Chưa làm', color: '#f59e0b', items: [] },
+            IN_PROGRESS: { title: '⏳ Đang làm', color: '#3b82f6', items: [] },
+            DONE: { title: '✅ Hoàn thành', color: '#10b981', items: [] }
+        };
+
+        notes.forEach(note => {
+            const status = note.status || 'TODO';
+            if (columns[status]) {
+                columns[status].items.push(note);
+            } else {
+                columns['TODO'].items.push(note);
+            }
+        });
+
+        return (
+            <div className="kanban-board">
+                {Object.entries(columns).map(([key, col]) => (
+                    <div key={key} className="kanban-column">
+                        <h3 style={{ borderBottom: `3px solid ${col.color}` }}>{col.title} ({col.items.length})</h3>
+                        <div className="kanban-items">
+                            {col.items.map(note => (
+                                <div key={note.id}
+                                    className="note-card kanban-card"
+                                    style={{ borderLeftColor: col.color, position: 'relative' }}
+                                    onClick={() => setSelectedNote(note)}
+                                >
+                                    <h4 style={{ marginTop: 0, marginBottom: '0.5rem', color: '#334155', paddingRight: '25px' }}>{note.title}</h4>
+
+                                    <button
+                                        onClick={(e) => handleDeleteNote(note.id, e)}
+                                        style={{
+                                            position: 'absolute',
+                                            top: '1rem',
+                                            right: '1rem',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            fontSize: '1.2rem',
+                                            padding: 0,
+                                            lineHeight: 1,
+                                            opacity: 0.5,
+                                            transition: 'opacity 0.2s'
+                                        }}
+                                        title="Xóa ghi chú"
+                                        className="btn-delete-icon"
+                                        onMouseEnter={e => e.target.style.opacity = 1}
+                                        onMouseLeave={e => e.target.style.opacity = 0.5}
+                                    >
+                                        🗑️
+                                    </button>
+
+                                    <p className="note-content-preview" style={{ fontSize: '0.9rem' }}>
+                                        {note.content.length > 80 ? note.content.substring(0, 80) + '...' : note.content}
+                                    </p>
+
+                                    {note.reminderTime && (
+                                        <div style={{ fontSize: '0.75rem', margin: '0.5rem 0', color: '#ef4444', fontWeight: '500' }}>
+                                            ⏰ {new Date(note.reminderTime).toLocaleString('vi-VN')}
+                                        </div>
+                                    )}
+
+                                    <div className="kanban-actions" onClick={e => e.stopPropagation()}>
+                                        {key === 'TODO' && (
+                                            <button className="btn-sm" onClick={() => handleUpdateStatus(note, 'IN_PROGRESS')}>
+                                                Bắt đầu
+                                            </button>
+                                        )}
+                                        {key === 'IN_PROGRESS' && (
+                                            <>
+                                                <button className="btn-sm" onClick={() => handleUpdateStatus(note, 'TODO')}>
+                                                    Dừng
+                                                </button>
+                                                <button className="btn-sm finish" onClick={() => handleUpdateStatus(note, 'DONE')}>
+                                                    Đã xong
+                                                </button>
+                                            </>
+                                        )}
+                                        {key === 'DONE' && (
+                                            <button className="btn-sm" onClick={() => handleUpdateStatus(note, 'TODO')}>
+                                                Làm lại
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
     };
 
     return (
@@ -316,9 +459,21 @@ const Notes = ({ user }) => {
             ) : selectedNote ? (
                 /* DETAIL VIEW */
                 <div className="note-detail-view">
-                    <button className="btn btn-outline" onClick={() => setSelectedNote(null)} style={{ marginBottom: '1rem' }}>
-                        ← Quay lại danh sách
-                    </button>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <button className="btn btn-outline" onClick={() => setSelectedNote(null)}>
+                            ← Quay lại danh sách
+                        </button>
+
+                        {(activeTab === 'personal' || !selectedNote.senderId) && (
+                            <button
+                                className="btn btn-outline"
+                                style={{ borderColor: '#ef4444', color: '#ef4444' }}
+                                onClick={() => handleDeleteNote(selectedNote.id)}
+                            >
+                                🗑️ Xóa ghi chú
+                            </button>
+                        )}
+                    </div>
 
                     <div className="note-card detail-card" style={{ borderLeftColor: selectedNote.color }}>
                         <div className="note-header">
@@ -378,48 +533,50 @@ const Notes = ({ user }) => {
                 </div>
             ) : (
                 /* LIST VIEW */
-                <div className="notes-grid">
-                    {notes.length === 0 && <p style={{ color: '#64748b' }}>Không có ghi chú nào.</p>}
+                activeTab === 'personal' ? renderKanban() : (
+                    <div className="notes-grid">
+                        {notes.length === 0 && <p style={{ color: '#64748b' }}>Không có ghi chú nào.</p>}
 
-                    {notes.map(note => (
-                        <div
-                            key={note.id}
-                            className="note-card hoverable"
-                            style={{ borderLeftColor: note.color }}
-                            onClick={() => {
-                                handleMarkRead(note);
-                                setSelectedNote(note);
-                            }}
-                        >
-                            <div className="note-header" style={{ marginBottom: '0.5rem' }}>
-                                <span className={`note-sender ${!note.isRead && activeTab === 'inbox' ? 'unread' : ''}`}>
-                                    {activeTab === 'inbox' ? (
-                                        <>
-                                            {note.senderName || 'Hệ thống'}
-                                        </>
-                                    ) : (
-                                        note.title
-                                    )}
-                                </span>
-                                <span className="note-date">
-                                    {new Date(note.updatedAt).toLocaleDateString('vi-VN')}
-                                </span>
-                            </div>
-
-                            {activeTab === 'inbox' && <h4 className="note-title-preview">{note.title}</h4>}
-
-                            <p className="note-content-preview">
-                                {note.content.length > 100 ? note.content.substring(0, 100) + '...' : note.content}
-                            </p>
-
-                            {note.replies && note.replies.length > 0 && (
-                                <div className="reply-badge">
-                                    <span>💬 {note.replies.length} phản hồi</span>
+                        {notes.map(note => (
+                            <div
+                                key={note.id}
+                                className="note-card hoverable"
+                                style={{ borderLeftColor: note.color }}
+                                onClick={() => {
+                                    handleMarkRead(note);
+                                    setSelectedNote(note);
+                                }}
+                            >
+                                <div className="note-header" style={{ marginBottom: '0.5rem' }}>
+                                    <span className={`note-sender ${!note.isRead && activeTab === 'inbox' ? 'unread' : ''}`}>
+                                        {activeTab === 'inbox' ? (
+                                            <>
+                                                {note.senderName || 'Hệ thống'}
+                                            </>
+                                        ) : (
+                                            note.title
+                                        )}
+                                    </span>
+                                    <span className="note-date">
+                                        {new Date(note.updatedAt).toLocaleDateString('vi-VN')}
+                                    </span>
                                 </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+
+                                {activeTab === 'inbox' && <h4 className="note-title-preview">{note.title}</h4>}
+
+                                <p className="note-content-preview">
+                                    {note.content.length > 100 ? note.content.substring(0, 100) + '...' : note.content}
+                                </p>
+
+                                {note.replies && note.replies.length > 0 && (
+                                    <div className="reply-badge">
+                                        <span>💬 {note.replies.length} phản hồi</span>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )
             )}
         </div>
     );

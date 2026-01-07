@@ -80,17 +80,52 @@ const Documents = () => {
                 if (subjectsRes.data && subjectsRes.data.length > 0) {
                     setSubjects(subjectsRes.data);
                 } else {
-                    // Fallback: try to get enrolled subjects (for students)
+                    // Fallback: try to get enrolled subjects + available subjects (for students)
                     const { enrollmentAPI } = await import('../services/api');
-                    const enrolledRes = await enrollmentAPI.getMySubjects();
-                    setSubjects(enrolledRes.data || []);
+                    try {
+                        // Get enrolled subjects
+                        const enrolledRes = await enrollmentAPI.getMySubjects();
+                        const enrolledSubjects = enrolledRes.data || [];
+
+                        // Also get available subjects
+                        const availableRes = await enrollmentAPI.getAvailableSubjects();
+                        const availableSubjects = availableRes.data || [];
+
+                        // Combine and remove duplicates
+                        const allSubjects = [...enrolledSubjects];
+                        availableSubjects.forEach(sub => {
+                            if (!allSubjects.find(s => s.id === sub.id)) {
+                                allSubjects.push(sub);
+                            }
+                        });
+
+                        setSubjects(allSubjects);
+                    } catch (enrollErr) {
+                        console.log('Could not load enrolled subjects');
+                        setSubjects([]);
+                    }
                 }
             } catch (e) {
-                console.log('Could not load subjects from getAll, trying enrolled subjects...');
+                console.log('Could not load subjects from getAll, trying enrolled + available subjects...');
                 try {
                     const { enrollmentAPI } = await import('../services/api');
+                    // Get enrolled subjects
                     const enrolledRes = await enrollmentAPI.getMySubjects();
-                    setSubjects(enrolledRes.data || []);
+                    const enrolledSubjects = enrolledRes.data || [];
+
+                    // Also get available subjects
+                    const availableRes = await enrollmentAPI.getAvailableSubjects();
+                    const availableSubjects = availableRes.data || [];
+
+                    // Combine and remove duplicates
+                    const allSubjects = [...enrolledSubjects];
+                    availableSubjects.forEach(sub => {
+                        if (!allSubjects.find(s => s.id === sub.id)) {
+                            allSubjects.push(sub);
+                        }
+                    });
+
+                    setSubjects(allSubjects);
                 } catch (err) {
                     console.log('No subjects available');
                     setSubjects([]);
@@ -132,10 +167,21 @@ const Documents = () => {
     const handleDownload = async (doc) => {
         try {
             await sharedDocumentAPI.trackDownload(doc.id);
-            // Open file in new tab
-            window.open(doc.fileUrl, '_blank');
+            // Construct full URL to backend server for file download
+            const backendBaseUrl = 'http://localhost:8080';
+            const fileUrl = doc.fileUrl.startsWith('http') ? doc.fileUrl : backendBaseUrl + doc.fileUrl;
+
+            // Create a temporary anchor element to trigger download
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.target = '_blank';
+            link.download = doc.fileName || 'download';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         } catch (error) {
             console.error('Error downloading:', error);
+            alert('Lỗi khi tải file. Vui lòng thử lại.');
         }
     };
 
@@ -195,7 +241,12 @@ const Documents = () => {
             alert('Đã chia sẻ tài liệu thành công!');
         } catch (error) {
             console.error('Error uploading:', error);
-            alert('Lỗi khi tải lên: ' + (error.response?.data?.message || error.message));
+            const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
+            if (errorMessage.includes('User not found')) {
+                alert('Lỗi: Không tìm thấy người dùng. Vui lòng đăng xuất và đăng nhập lại.');
+            } else {
+                alert('Lỗi khi tải lên: ' + errorMessage);
+            }
         }
     };
 
